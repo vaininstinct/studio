@@ -105,9 +105,6 @@ export default function LeadsPage() {
         
         const newLeads = generateMockLeads(8);
         
-        // This is tricky: we need the real ID from firestore, but we started optimistically.
-        // For this mock, we'll assume the first campaign in the list is the one we just created.
-        // A more robust solution would involve passing the real ID back.
         setCampaigns(prev => {
             const campaignToUpdate = prev.find(c => c.id === newCampaign.id);
             if (campaignToUpdate) {
