@@ -4,7 +4,6 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface AuthContextType {
   user: User | null;
@@ -25,17 +24,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
-
-  if (loading) {
-    return (
-        <div className="flex h-screen w-full items-center justify-center">
-             <div className="flex flex-col items-center gap-4">
-                <Skeleton className="h-16 w-16 rounded-full" />
-                <Skeleton className="h-4 w-48" />
-            </div>
-        </div>
-    );
-  }
 
   return (
     <AuthContext.Provider value={{ user, loading }}>

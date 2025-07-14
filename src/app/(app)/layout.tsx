@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { useAuth } from '@/context/auth-context';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,13 +14,19 @@ export default function AppLayout({
 }>) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    // If loading is finished and there's no user, redirect to login
-    if (!loading && !user) {
+    if (loading) return; // Wait until authentication state is loaded
+
+    const isPublicPage = pathname === '/login' || pathname === '/signup';
+
+    // If we're done loading and there's no user, redirect to login
+    // unless we are already on a public page.
+    if (!user && !isPublicPage) {
       router.push('/login');
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, pathname]);
 
   // Show a loading skeleton while checking auth state
   if (loading) {
@@ -33,8 +40,8 @@ export default function AppLayout({
     );
   }
   
-  // Don't render anything if there's no user, as we'll be redirecting.
-  // This prevents a flash of protected content.
+  // If no user, the effect will handle redirection. Return null to avoid
+  // flashing protected content.
   if (!user) {
     return null; 
   }
