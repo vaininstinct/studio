@@ -5,13 +5,14 @@ import { useState, useEffect } from 'react';
 import { CreateCampaignDialog } from '@/components/leads/create-campaign-dialog';
 import type { Campaign, Lead } from '@/lib/data';
 import { LeadCard } from '@/components/leads/lead-card';
-import { CampaignStatus } from '@/components/leads/campaign-status';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { PlayCircle, Loader2, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/auth-context';
 import { getCampaigns, addLeadsToCampaign, createCampaign as createDbCampaign, deleteCampaign } from '@/services/campaign';
+import { addMessageToOutbox } from '@/services/outbox';
+import { runGenerateOpener } from '@/app/actions/outreach';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   AlertDialog,
@@ -23,6 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { useRouter } from 'next/navigation';
 
 export default function LeadsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -31,6 +33,7 @@ export default function LeadsPage() {
   const [campaignToDelete, setCampaignToDelete] = useState<Campaign | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (!user) return;
@@ -56,47 +59,80 @@ export default function LeadsPage() {
   }, [user, toast]);
   
 
-  const handleStartCampaign = async (campaignId: string, campaignName: string) => {
-    setRunningCampaign(campaignId);
-    // Simulate API call to start the campaign
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setRunningCampaign(null);
-    toast({
-      title: 'Campaign Started!',
-      description: `Outreach for the "${campaignName}" campaign has begun.`,
-    });
+  const handleStartCampaign = async (campaign: Campaign) => {
+    if (!user) return;
+
+    setRunningCampaign(campaign.id);
+    
+    try {
+      const leadPromises = campaign.leads.map(lead => {
+        return runGenerateOpener({
+          leadProfileData: `Username: ${lead.username}\nBio: ${lead.bio}`,
+          goal: 'Start a friendly conversation and build rapport.',
+        });
+      });
+  
+      const results = await Promise.all(leadPromises);
+  
+      const outboxPromises = results.map((result, index) => {
+        const lead = campaign.leads[index];
+        return addMessageToOutbox({
+          lead: lead,
+          campaignId: campaign.id,
+          campaignName: campaign.name,
+          generatedMessage: result.openingMessage,
+          userId: user.uid,
+        });
+      });
+
+      await Promise.all(outboxPromises);
+
+      toast({
+        title: 'Campaign Complete!',
+        description: `Outreach messages for "${campaign.name}" have been generated.`,
+        action: (
+           <Button variant="outline" size="sm" onClick={() => router.push('/outbox')}>
+             View Outbox
+           </Button>
+        ),
+      });
+
+    } catch (error) {
+      console.error("Error running campaign:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Campaign Failed',
+        description: 'Could not generate messages for the campaign.',
+      });
+    } finally {
+      setRunningCampaign(null);
+    }
   };
 
   const onCampaignCreated = async (campaignName: string, usernames: string[]) => {
     if (!user) return;
 
     try {
-      // 1. Create campaign shell and update UI immediately
       const newCampaignData = await createDbCampaign(campaignName, user.uid);
-      const tempCampaign: Campaign = { ...newCampaignData, leads: [] };
-      setCampaigns(prev => [tempCampaign, ...prev]);
-
-      toast({
-         title: "Campaign Created",
-         description: `Successfully created "${campaignName}". Now adding leads...`
-      });
-
-      // 2. Prepare leads
+      
       const newLeads: Lead[] = usernames.map(username => ({
-        id: Math.random().toString(36).substring(2, 9), // simple unique id
+        id: Math.random().toString(36).substring(2, 9),
         username: username,
-        name: username, // Use username as name initially
+        name: username,
         bio: `A lead imported for the "${campaignName}" campaign.`,
         avatarUrl: 'https://placehold.co/100x100.png',
         latestPostImageUrl: 'https://placehold.co/300x300.png'
       }));
       
-      // 3. Add leads to the campaign in DB (in the background)
-      await addLeadsToCampaign(newCampaignData.id, newLeads);
-
-      // 4. Update the campaign in the UI with the new leads
       const finalCampaign: Campaign = { ...newCampaignData, leads: newLeads };
-      setCampaigns(prev => prev.map(c => c.id === finalCampaign.id ? finalCampaign : c));
+      setCampaigns(prev => [finalCampaign, ...prev]);
+      
+      toast({
+         title: "Campaign Created",
+         description: `Successfully created "${campaignName}". Adding ${newLeads.length} leads.`
+      });
+
+      await addLeadsToCampaign(newCampaignData.id, newLeads);
 
     } catch (error) {
       console.error("Campaign creation failed:", error);
@@ -176,8 +212,8 @@ export default function LeadsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleStartCampaign(campaign.id, campaign.name)}
-                          disabled={runningCampaign === campaign.id}
+                          onClick={() => handleStartCampaign(campaign)}
+                          disabled={runningCampaign === campaign.id || campaign.leads.length === 0}
                         >
                           {runningCampaign === campaign.id ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

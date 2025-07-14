@@ -1,3 +1,5 @@
+import type { Timestamp } from "firebase/firestore";
+
 export interface Lead {
   id: string;
   name: string;
@@ -8,11 +10,21 @@ export interface Lead {
 }
 
 export interface Campaign {
-  id: string;
+  id:string;
   name: string;
   leads: Lead[];
   userId: string;
   createdAt: any; // Firestore timestamp
+}
+
+export interface OutboxMessage {
+  id: string;
+  lead: Lead;
+  campaignId: string;
+  campaignName: string;
+  generatedMessage: string;
+  userId: string;
+  createdAt: Timestamp;
 }
 
 
