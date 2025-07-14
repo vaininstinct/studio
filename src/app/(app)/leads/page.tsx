@@ -69,22 +69,25 @@ export default function LeadsPage() {
     ];
     let currentStep = 0;
     const interval = setInterval(() => {
+      if (currentStep >= steps.length) {
+        clearInterval(interval);
+        setTimeout(() => {
+          setCampaigns(prev => prev.map(c => 
+           c.id === newCampaign.id ? { ...c, status: 'idle' } : c
+         ));
+         toast({
+           title: "Extraction Complete",
+           description: `Finished extracting leads for "${newCampaign.name}".`
+         })
+       }, 1000);
+        return;
+      }
+      
       setCampaigns(prev => prev.map(c => 
         c.id === newCampaign.id ? { ...c, progress: steps[currentStep].progress, statusText: steps[currentStep].statusText } : c
       ));
       currentStep++;
-      if (currentStep >= steps.length) {
-        clearInterval(interval);
-         setTimeout(() => {
-           setCampaigns(prev => prev.map(c => 
-            c.id === newCampaign.id ? { ...c, status: 'idle' } : c
-          ));
-          toast({
-            title: "Extraction Complete",
-            description: `Finished extracting leads for "${newCampaign.name}".`
-          })
-        }, 1000);
-      }
+
     }, 1500);
   };
 
