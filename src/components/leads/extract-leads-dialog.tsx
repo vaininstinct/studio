@@ -14,54 +14,50 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, PlusCircle, Search, UserCheck } from 'lucide-react';
+import { Loader2, PlusCircle, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '../ui/textarea';
 
-interface ExtractLeadsDialogProps {
-  onCampaignCreated: (campaignName: string, targetAccount: string, niche: string) => void;
+interface CreateCampaignDialogProps {
+  onCampaignCreated: (campaignName: string, usernames: string[]) => Promise<void>;
 }
 
-export function ExtractLeadsDialog({ onCampaignCreated }: ExtractLeadsDialogProps) {
+export function CreateCampaignDialog({ onCampaignCreated }: CreateCampaignDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isExtracting, setIsExtracting] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [campaignName, setCampaignName] = useState('');
-  const [targetAccount, setTargetAccount] = useState('');
-  const [niche, setNiche] = useState('');
+  const [usernames, setUsernames] = useState('');
   const { toast } = useToast();
 
-  const handleExtract = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleCreate = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!campaignName.trim() || !targetAccount.trim() || !niche.trim()) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Please fill out all fields.' });
+    if (!campaignName.trim()) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Please provide a campaign name.' });
       return;
     }
+    
+    const usernameList = usernames.split('\n').map(u => u.trim()).filter(Boolean);
+    if (usernameList.length === 0) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Please enter at least one username.' });
+        return;
+    }
 
-    setIsExtracting(true);
-    setIsOpen(false);
+    setIsCreating(true);
     
     try {
-      onCampaignCreated(campaignName, targetAccount, niche);
+      await onCampaignCreated(campaignName, usernameList);
       
-      toast({
-        title: 'Extraction Started',
-        description: `We are extracting new leads for the "${campaignName}" campaign.`,
-      });
-
-      // Reset fields for the next time the dialog is opened
+      // Reset fields and close dialog on success
+      setIsOpen(false);
       setCampaignName('');
-      setTargetAccount('');
-      setNiche('');
+      setUsernames('');
       
     } catch (error) {
       console.error(error);
-      toast({
-        variant: 'destructive',
-        title: 'Extraction Failed',
-        description: 'Could not start the lead extraction process.',
-      });
+      // Toast for failure is handled in the parent component
     } finally {
-      setTimeout(() => setIsExtracting(false), 500);
+      setIsCreating(false);
     }
   };
 
@@ -70,17 +66,17 @@ export function ExtractLeadsDialog({ onCampaignCreated }: ExtractLeadsDialogProp
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Extract New Leads
+          Create New Campaign
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Extract New Leads</DialogTitle>
+          <DialogTitle>Create New Campaign</DialogTitle>
           <DialogDescription>
-            Create a new campaign and use AI to generate leads from a target Instagram account.
+            Name your campaign and paste a list of Instagram usernames to import as leads.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleExtract} className="space-y-4">
+        <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-2">
                 <Label htmlFor="campaignName">Campaign Name</Label>
                 <Input 
@@ -93,40 +89,27 @@ export function ExtractLeadsDialog({ onCampaignCreated }: ExtractLeadsDialogProp
                 />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="target">Target Instagram Account</Label>
-                <div className="relative">
-                    <UserCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input 
-                        id="target" 
-                        name="target" 
-                        placeholder="e.g. @username" 
-                        required 
-                        className="pl-10"
-                        value={targetAccount}
-                        onChange={(e) => setTargetAccount(e.target.value)}
-                    />
-                </div>
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="niche">Niche / Industry</Label>
-                <Input 
-                    id="niche" 
-                    name="niche" 
-                    placeholder="e.g. Fitness, Photography, Real Estate" 
-                    required 
-                    value={niche}
-                    onChange={(e) => setNiche(e.target.value)}
+                <Label htmlFor="usernames">Instagram Usernames</Label>
+                 <Textarea
+                    id="usernames"
+                    placeholder="Paste usernames, one per line...&#10;@username1&#10;@username2&#10;@username3"
+                    rows={8}
+                    value={usernames}
+                    onChange={(e) => setUsernames(e.target.value)}
+                    className="font-mono text-sm"
+                    required
                 />
+                 <p className="text-xs text-muted-foreground">Each username must be on a new line.</p>
             </div>
           
           <DialogFooter className="pt-4">
-            <Button type="submit" className="w-full" disabled={isExtracting}>
-              {isExtracting ? (
+            <Button type="submit" className="w-full" disabled={isCreating}>
+              {isCreating ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  <Search className="mr-2 h-4 w-4" />
-                  Start Extraction
+                  <Users className="mr-2 h-4 w-4" />
+                  Create Campaign and Import Leads
                 </>
               )}
             </Button>

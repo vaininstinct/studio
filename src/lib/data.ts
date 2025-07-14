@@ -10,13 +10,9 @@ export interface Lead {
 export interface Campaign {
   id: string;
   name: string;
-  niche: string;
   leads: Lead[];
   userId: string;
   createdAt: any; // Firestore timestamp
-  status: 'idle' | 'extracting';
-  progress?: number;
-  statusText?: string;
 }
 
 

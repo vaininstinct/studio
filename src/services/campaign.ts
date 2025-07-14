@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, updateDoc, deleteDoc, orderBy } from 'firebase/firestore';
 import type { Campaign, Lead } from '@/lib/data';
 
 /**
@@ -12,7 +12,6 @@ export async function createCampaign(campaignName: string, userId: string): Prom
   const campaignRef = await addDoc(collection(db, 'campaigns'), {
     name: campaignName,
     userId: userId,
-    niche: '', // Can be updated later
     leads: [],
     createdAt: serverTimestamp(),
   });
@@ -21,10 +20,8 @@ export async function createCampaign(campaignName: string, userId: string): Prom
     id: campaignRef.id,
     name: campaignName,
     userId: userId,
-    niche: '',
     leads: [],
     createdAt: new Date(), // Use client-side date for immediate UI update
-    status: 'extracting',
   };
   return newCampaign;
 }
@@ -35,7 +32,7 @@ export async function createCampaign(campaignName: string, userId: string): Prom
  * @returns A promise that resolves to an array of campaigns.
  */
 export async function getCampaigns(userId: string): Promise<Campaign[]> {
-  const q = query(collection(db, 'campaigns'), where('userId', '==', userId));
+  const q = query(collection(db, 'campaigns'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
   const querySnapshot = await getDocs(q);
   
   const campaigns: Campaign[] = [];
@@ -47,13 +44,6 @@ export async function getCampaigns(userId: string): Promise<Campaign[]> {
       // Ensure leads is always an array
       leads: data.leads || [],
     } as Campaign);
-  });
-  
-  // Sort by creation date, newest first
-  campaigns.sort((a, b) => {
-    const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
-    const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
-    return dateB.getTime() - dateA.getTime();
   });
 
   return campaigns;
