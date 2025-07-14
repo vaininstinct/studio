@@ -106,7 +106,16 @@ export function CreateCampaignDialog({ onCampaignCreated }: CreateCampaignDialog
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      setIsOpen(open);
+      if (!open) {
+        // Reset state on close
+        setCampaignName('');
+        setUsernames('');
+        setFileName('');
+        setIsCreating(false);
+      }
+    }}>
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
