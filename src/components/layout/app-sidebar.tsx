@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, Bot, Settings, Users, MessageSquare } from 'lucide-react';
+import { BarChart3, Bot, Settings, Users, Send } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/leads', label: 'Leads', icon: Users },
+  { href: '/outbox', label: 'Outbox', icon: Send },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];

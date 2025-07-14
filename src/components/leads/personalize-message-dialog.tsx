@@ -20,17 +20,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import type { Lead } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { runPersonalizeMessage } from '@/app/actions/personalize';
+import { Input } from '@/components/ui/input';
+import { runGenerateOpener } from '@/app/actions/outreach';
 
 const FormSchema = z.object({
-  messageTemplate: z.string().min(10, {
-    message: 'Template must be at least 10 characters.',
+  goal: z.string().min(5, {
+    message: 'Goal must be at least 5 characters.',
   }),
 });
 
 type FormValues = z.infer<typeof FormSchema>;
 
-const defaultTemplate = `Hey {name}! I came across your profile and love your content. I think we could create something amazing together. Are you open to a chat?`;
+const defaultGoal = 'Book a 15-minute discovery call';
 
 interface PersonalizeMessageDialogProps {
   lead: Lead;
@@ -38,7 +39,7 @@ interface PersonalizeMessageDialogProps {
 
 export function PersonalizeMessageDialog({ lead }: PersonalizeMessageDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [personalizedMessage, setPersonalizedMessage] = useState('');
+  const [generatedMessage, setGeneratedMessage] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
@@ -46,20 +47,20 @@ export function PersonalizeMessageDialog({ lead }: PersonalizeMessageDialogProps
   const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      messageTemplate: defaultTemplate.replace('{name}', lead.name.split(' ')[0]),
+      goal: defaultGoal,
     },
   });
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsGenerating(true);
-    setPersonalizedMessage('');
+    setGeneratedMessage('');
     try {
-      const result = await runPersonalizeMessage({
+      const result = await runGenerateOpener({
         leadProfileData: `Name: ${lead.name}, Bio: ${lead.bio}, Recent Post context: User is interested in photography and travel.`,
-        messageTemplate: data.messageTemplate,
+        goal: data.goal,
       });
-      if (result && 'personalizedMessage' in result) {
-        setPersonalizedMessage(result.personalizedMessage);
+      if (result && 'openingMessage' in result) {
+        setGeneratedMessage(result.openingMessage);
       } else {
         toast({
           variant: 'destructive',
@@ -86,7 +87,7 @@ export function PersonalizeMessageDialog({ lead }: PersonalizeMessageDialogProps
     setIsOpen(false);
     toast({
       title: 'Message Sent!',
-      description: `Your message to @${lead.username} has been sent.`,
+      description: `Your automated conversation with @${lead.username} has started.`,
     });
   };
 
@@ -95,29 +96,27 @@ export function PersonalizeMessageDialog({ lead }: PersonalizeMessageDialogProps
       <DialogTrigger asChild>
         <Button className="w-full">
           <Send className="mr-2 h-4 w-4" />
-          Message
+          Start Conversation
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Message @{lead.username}</DialogTitle>
+          <DialogTitle>Start AI Conversation with @{lead.username}</DialogTitle>
           <DialogDescription>
-            Personalize your message using AI to increase your response rate.
+            Define the goal and let the AI generate a personalized opening message to start the conversation.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="messageTemplate"
+              name="goal"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Message Template</FormLabel>
+                  <FormLabel>Conversation Goal</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Enter your message template"
-                      rows={4}
-                      className="resize-none"
+                    <Input
+                      placeholder="e.g., Book a call, redirect to website"
                       {...field}
                     />
                   </FormControl>
@@ -131,24 +130,24 @@ export function PersonalizeMessageDialog({ lead }: PersonalizeMessageDialogProps
               ) : (
                 <Bot className="mr-2 h-4 w-4" />
               )}
-              Generate with AI
+              Generate Opening Message
             </Button>
           </form>
         </Form>
-        {personalizedMessage && (
+        {generatedMessage && (
           <div className="space-y-2 pt-4">
-            <FormLabel>Personalized Message</FormLabel>
-            <Textarea readOnly value={personalizedMessage} rows={5} className="resize-none" />
+            <FormLabel>Generated Message</FormLabel>
+            <Textarea readOnly value={generatedMessage} rows={5} className="resize-none bg-secondary/50" />
           </div>
         )}
         <DialogFooter>
           <Button
             type="button"
             onClick={handleSend}
-            disabled={!personalizedMessage || isSending}
+            disabled={!generatedMessage || isSending}
           >
             {isSending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Send Message
+            Send and Start Automation
           </Button>
         </DialogFooter>
       </DialogContent>
