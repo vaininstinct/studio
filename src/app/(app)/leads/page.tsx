@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { PlayCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/auth-context';
-import { getCampaigns, addLeadsToCampaign } from '@/services/campaign';
+import { getCampaigns, addLeadsToCampaign, createCampaign as createDbCampaign } from '@/services/campaign';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const generateMockLeads = (count: number): Lead[] => {
@@ -86,17 +86,19 @@ export default function LeadsPage() {
   };
 
   const onCampaignCreated = (newCampaign: Campaign) => {
+    // Add campaign to state with 'extracting' status
     const campaignWithStatus: Campaign = { ...newCampaign, status: 'extracting', progress: 0, statusText: 'Initializing...' };
     setCampaigns(prev => [campaignWithStatus, ...prev]);
-
+  
     // Simulate extraction progress
     const steps = [
       { progress: 25, statusText: 'Checking account visibility...' },
       { progress: 50, statusText: 'Extracting followers...' },
       { progress: 75, statusText: 'Filtering leads...' },
-      { progress: 100, statusText: 'Extraction complete!' },
+      { progress: 100, statusText: 'Finalizing...' },
     ];
     let currentStep = 0;
+    
     const interval = setInterval(() => {
       if (currentStep >= steps.length) {
         clearInterval(interval);
@@ -116,7 +118,7 @@ export default function LeadsPage() {
         // Update UI immediately
         setCampaigns(prev => prev.map(c => {
           if (c.id === newCampaign.id) {
-            return { ...c, status: 'idle', leads: [...c.leads, ...newLeads] };
+            return { ...c, status: 'idle', leads: [...(c.leads || []), ...newLeads] };
           }
           return c;
         }));
@@ -135,6 +137,7 @@ export default function LeadsPage() {
 
     }, 1500);
   };
+
 
   if (isLoading) {
     return (
@@ -158,7 +161,7 @@ export default function LeadsPage() {
     <div className="flex flex-1 flex-col bg-background sm:pl-20">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-card px-6">
         <h1 className="text-xl font-semibold">Campaigns</h1>
-        <ExtractLeadsDialog onCampaignCreated={onCampaignCreated} campaigns={campaigns} />
+        <ExtractLeadsDialog onCampaignCreated={onCampaignCreated} />
       </header>
       <main className="flex-1 overflow-auto p-4 md:p-6">
         {campaigns.length > 0 ? (
@@ -171,7 +174,7 @@ export default function LeadsPage() {
                         <div className="flex items-center gap-3">
                           <span>{campaign.name}</span>
                           <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
-                            {campaign.leads.length} Leads
+                            {campaign.leads?.length || 0} Leads
                           </span>
                         </div>
                         {campaign.status === 'extracting' && (
@@ -195,7 +198,7 @@ export default function LeadsPage() {
                     </Button>
                   </div>
                 <AccordionContent className="pt-2">
-                  {campaign.leads.length > 0 ? (
+                  {campaign.leads && campaign.leads.length > 0 ? (
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                       {campaign.leads.map((lead) => (
                         <LeadCard key={lead.id} lead={lead} />
