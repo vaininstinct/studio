@@ -22,6 +22,7 @@ import type { Lead } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { runGenerateOpener } from '@/app/actions/outreach';
+import { Label } from '@/components/ui/label';
 
 const FormSchema = z.object({
   goal: z.string().min(5, {
@@ -156,7 +157,7 @@ export function PersonalizeMessageDialog({ lead }: PersonalizeMessageDialogProps
         </Form>
         {generatedMessage && (
           <div className="space-y-2 pt-4">
-            <FormLabel>Generated Message</FormLabel>
+            <Label>Generated Message</Label>
             <Textarea readOnly value={generatedMessage} rows={5} className="resize-none bg-secondary/50" />
           </div>
         )}
