@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import type { Campaign, Lead } from '@/lib/data';
 
 /**
@@ -78,4 +78,13 @@ export async function addLeadsToCampaign(campaignId: string, leads: Lead[]): Pro
   await updateDoc(campaignRef, {
     leads: updatedLeads
   });
+}
+
+/**
+ * Deletes a campaign from Firestore.
+ * @param campaignId The ID of the campaign to delete.
+ */
+export async function deleteCampaign(campaignId: string): Promise<void> {
+  const campaignRef = doc(db, 'campaigns', campaignId);
+  await deleteDoc(campaignRef);
 }
