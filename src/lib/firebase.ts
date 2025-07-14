@@ -3,15 +3,30 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 // =================================================================================
-// IMPORTANT: PASTE YOUR FIREBASE CONFIGURATION HERE
-// =================================================================================
+// HOW TO FIND YOUR FIREBASE CONFIGURATION:
+//
 // 1. Go to your Firebase project console: https://console.firebase.google.com/
-// 2. Click the gear icon (⚙️) next to "Project Overview" and select "Project settings".
+//
+// 2. In the left sidebar, click the gear icon (⚙️) next to "Project Overview", 
+//    then select "Project settings".
+//
 // 3. In the "General" tab, scroll down to the "Your apps" section.
-// 4. In the "SDK setup and configuration" panel, select the "Config" option.
-// 5. You will see a block of code starting with `const firebaseConfig = { ... }`.
-// 6. Copy the values from that block and paste them below, replacing the placeholder strings.
+//
+// 4. In the list of your apps, find your web app (if you don't have one, create it).
+//
+// 5. In the "SDK setup and configuration" panel, select the "Config" option.
+//
+// 6. You will see a block of code that looks like this:
+//    const firebaseConfig = {
+//      apiKey: "AIb2SyC...ABC123",
+//      authDomain: "your-project-id.firebaseapp.com",
+//      ...and so on
+//    };
+//
+// 7. Copy the values from YOUR project console and paste them below,
+//    replacing the "PASTE_YOUR_..." placeholders.
 // =================================================================================
+
 const firebaseConfig = {
   apiKey: "PASTE_YOUR_API_KEY_HERE",
   authDomain: "PASTE_YOUR_AUTH_DOMAIN_HERE",
