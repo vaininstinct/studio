@@ -4,8 +4,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+// import { createUserWithEmailAndPassword } from 'firebase/auth';
+// import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,24 +23,11 @@ export default function SignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      router.push('/leads');
-    } catch (error: any) {
-      let errorMessage = 'An unexpected error occurred.';
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'This email is already registered. Please login.';
-      } else {
-        errorMessage = error.message;
-      }
-      toast({
-        variant: 'destructive',
-        title: 'Signup Failed',
-        description: errorMessage,
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // Simulate signup and redirect
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    router.push('/leads');
+    toast({ title: 'Account Created', description: 'Redirecting to your dashboard.' });
+    setIsLoading(false);
   };
 
   return (
@@ -72,7 +59,7 @@ export default function SignupPage() {
                 required
                 minLength={6}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.g. value)}
                 disabled={isLoading}
               />
             </div>
