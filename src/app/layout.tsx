@@ -28,6 +28,7 @@ export default function RootLayout({
         className={cn(
           'min-h-screen bg-background font-body antialiased'
         )}
+        suppressHydrationWarning={true}
       >
         <div className="flex min-h-screen w-full">
           <AppSidebar />
