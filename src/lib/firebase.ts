@@ -5,11 +5,12 @@ import { getAuth } from "firebase/auth";
 // =================================================================================
 // IMPORTANT: PASTE YOUR FIREBASE CONFIGURATION HERE
 // =================================================================================
-// 1. Go to your Firebase project console.
-// 2. Go to Project Settings (gear icon) -> General tab.
-// 3. Scroll down to "Your apps".
-// 4. In "SDK setup and configuration", select "Config".
-// 5. Copy the values and paste them below, replacing the placeholder strings.
+// 1. Go to your Firebase project console: https://console.firebase.google.com/
+// 2. Click the gear icon (⚙️) next to "Project Overview" and select "Project settings".
+// 3. In the "General" tab, scroll down to the "Your apps" section.
+// 4. In the "SDK setup and configuration" panel, select the "Config" option.
+// 5. You will see a block of code starting with `const firebaseConfig = { ... }`.
+// 6. Copy the values from that block and paste them below, replacing the placeholder strings.
 // =================================================================================
 const firebaseConfig = {
   apiKey: "PASTE_YOUR_API_KEY_HERE",
