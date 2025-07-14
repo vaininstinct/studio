@@ -76,8 +76,8 @@ export default function LeadsPage() {
       
       const newLeads: Lead[] = usernames.map(username => ({
         id: Math.random().toString(36).substring(2, 9), // simple unique id
-        username: username.replace('@', ''),
-        name: username.replace('@', ''), // Use username as name initially
+        username: username,
+        name: username, // Use username as name initially
         bio: `A lead imported for the "${campaignName}" campaign.`,
         avatarUrl: 'https://placehold.co/100x100.png',
         latestPostImageUrl: 'https://placehold.co/300x300.png'
