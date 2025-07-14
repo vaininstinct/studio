@@ -19,8 +19,14 @@ import { Loader2, PlusCircle, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { Campaign } from '@/lib/data';
 
-export function ExtractLeadsDialog() {
+interface ExtractLeadsDialogProps {
+  onCampaignCreated: (campaign: Campaign) => void;
+  campaigns: Campaign[];
+}
+
+export function ExtractLeadsDialog({ onCampaignCreated, campaigns }: ExtractLeadsDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [campaignOption, setCampaignOption] = useState('existing');
@@ -29,7 +35,8 @@ export function ExtractLeadsDialog() {
   const handleExtract = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsExtracting(true);
-    // Simulate API call for extraction
+    // This is where you would call the real lead extraction logic
+    // For now, we'll just simulate it and show a success message.
     await new Promise((resolve) => setTimeout(resolve, 2500));
     setIsExtracting(false);
     setIsOpen(false);
@@ -72,20 +79,24 @@ export function ExtractLeadsDialog() {
             {campaignOption === 'existing' ? (
               <div className="space-y-2">
                 <Label htmlFor="campaign-select">Select Campaign</Label>
-                <Select defaultValue="saas-founders">
+                <Select name="campaignId" disabled={campaigns.length === 0}>
                   <SelectTrigger id="campaign-select">
                     <SelectValue placeholder="Select a campaign" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="saas-founders">SaaS Founders</SelectItem>
-                    <SelectItem value="fitness-coaches">Fitness Coaches</SelectItem>
+                    {campaigns.map(c => (
+                       <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+                 {campaigns.length === 0 && (
+                  <p className="text-xs text-muted-foreground">You don't have any campaigns yet. Select "Create New" to start.</p>
+                )}
               </div>
             ) : (
               <div className="space-y-2">
                 <Label htmlFor="new-campaign-name">New Campaign Name</Label>
-                <Input id="new-campaign-name" placeholder="e.g., Real Estate Agents" required />
+                <Input id="new-campaign-name" name="newCampaignName" placeholder="e.g., Real Estate Agents" required />
               </div>
             )}
           </div>
@@ -99,19 +110,19 @@ export function ExtractLeadsDialog() {
               <TabsContent value="followers" className="space-y-4 pt-2">
                 <div className="space-y-2">
                   <Label htmlFor="followers-username">Target Account Username</Label>
-                  <Input id="followers-username" placeholder="@username" required />
+                  <Input id="followers-username" name="target" placeholder="@username" required />
                 </div>
               </TabsContent>
               <TabsContent value="likes" className="space-y-4 pt-2">
                 <div className="space-y-2">
                   <Label htmlFor="likes-post-url">Post URL</Label>
-                  <Input id="likes-post-url" placeholder="https://www.instagram.com/p/..." required />
+                  <Input id="likes-post-url" name="target" placeholder="https://www.instagram.com/p/..." required />
                 </div>
               </TabsContent>
               <TabsContent value="comments" className="space-y-4 pt-2">
                 <div className="space-y-2">
                   <Label htmlFor="comments-post-url">Post URL</Label>
-                  <Input id="comments-post-url" placeholder="https://www.instagram.com/p/..." required />
+                  <Input id="comments-post-url" name="target" placeholder="https://www.instagram.com/p/..." required />
                 </div>
               </TabsContent>
           </Tabs>
@@ -119,7 +130,7 @@ export function ExtractLeadsDialog() {
             <Label htmlFor="keywords">
               Filter by Keywords in Bio/Profile
             </Label>
-            <Input id="keywords" placeholder="e.g., coaching, smma, saas" />
+            <Input id="keywords" name="keywords" placeholder="e.g., coaching, smma, saas" />
           </div>
           <DialogFooter className="pt-6">
             <Button type="submit" className="w-full" disabled={isExtracting}>

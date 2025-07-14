@@ -12,72 +12,9 @@ export interface Campaign {
   name: string;
   niche: string;
   leads: Lead[];
+  userId: string;
+  createdAt: any; // Firestore timestamp
 }
-
-
-export const mockCampaigns: Campaign[] = [
-  {
-    id: 'campaign-1',
-    name: 'SaaS Founders',
-    niche: 'Software as a Service',
-    leads: [
-      {
-        id: '1',
-        name: 'Alice Johnson',
-        username: 'alicej',
-        avatarUrl: 'https://placehold.co/100x100/673AB7/FFFFFF.png',
-        bio: 'Founder of @SaaSify. Building tools for the future. 🚀',
-        latestPostImageUrl: 'https://placehold.co/400x400.png',
-      },
-      {
-        id: '3',
-        name: 'Charlie Brown',
-        username: 'charlieb',
-        avatarUrl: 'https://placehold.co/100x100/FFC107/FFFFFF.png',
-        bio: 'Co-founder & CEO at @LeadGenius. We help you find your next customer. #SaaS',
-        latestPostImageUrl: 'https://placehold.co/400x400.png',
-      },
-      {
-        id: '4',
-        name: 'Diana Miller',
-        username: 'dianam',
-        avatarUrl: 'https://placehold.co/100x100/E91E63/FFFFFF.png',
-        bio: 'Building in public. Founder of @StyleUp, a fashion tech SaaS. Sharing my journey through style.',
-        latestPostImageUrl: 'https://placehold.co/400x400.png',
-      },
-    ]
-  },
-  {
-    id: 'campaign-2',
-    name: 'Fitness Coaches',
-    niche: 'Health & Wellness',
-    leads: [
-       {
-        id: '2',
-        name: 'Bob Williams',
-        username: 'bobw',
-        avatarUrl: 'https://placehold.co/100x100/3F51B5/FFFFFF.png',
-        bio: 'Fitness coach and nutritionist. Helping you become the best version of yourself. #fitness #health',
-        latestPostImageUrl: 'https://placehold.co/400x400.png',
-      },
-      {
-        id: '8',
-        name: 'Hannah Wilson',
-        username: 'hannahw',
-        avatarUrl: 'https://placehold.co/100x100/FF9800/FFFFFF.png',
-        bio: 'Yoga instructor and wellness advocate. Finding balance on and off the mat. 🧘‍♀️',
-      },
-       {
-        id: '5',
-        name: 'Ethan Davis',
-        username: 'ethand',
-        avatarUrl: 'https://placehold.co/100x100/4CAF50/FFFFFF.png',
-        bio: 'Online fitness coach. Get fit from home. DM for personal training plans.',
-        latestPostImageUrl: 'https://placehold.co/400x400.png',
-      },
-    ]
-  }
-];
 
 
 export type ChartConfig = {
