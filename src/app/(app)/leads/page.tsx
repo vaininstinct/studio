@@ -60,7 +60,7 @@ export default function LeadsPage() {
   
 
   const handleStartCampaign = async (campaign: Campaign) => {
-    if (!user) return;
+    if (!user || !campaign.leads || campaign.leads.length === 0) return;
 
     setRunningCampaign(campaign.id);
     
@@ -113,6 +113,7 @@ export default function LeadsPage() {
     if (!user) return;
 
     try {
+      // 1. Create the campaign document in Firestore
       const newCampaignData = await createDbCampaign(campaignName, user.uid);
       
       const newLeads: Lead[] = usernames.map(username => ({
@@ -124,14 +125,16 @@ export default function LeadsPage() {
         latestPostImageUrl: 'https://placehold.co/300x300.png'
       }));
       
-      const finalCampaign: Campaign = { ...newCampaignData, leads: newLeads };
-      setCampaigns(prev => [finalCampaign, ...prev]);
+      // 2. Update UI immediately with the new campaign shell
+      const campaignForUi: Campaign = { ...newCampaignData, leads: newLeads };
+      setCampaigns(prev => [campaignForUi, ...prev]);
       
       toast({
          title: "Campaign Created",
          description: `Successfully created "${campaignName}". Adding ${newLeads.length} leads.`
       });
 
+      // 3. Add leads to the campaign in the background
       await addLeadsToCampaign(newCampaignData.id, newLeads);
 
     } catch (error) {
@@ -194,7 +197,7 @@ export default function LeadsPage() {
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-6">
           {campaigns.length > 0 ? (
-            <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
+            <Accordion type="single" collapsible className="w-full" defaultValue={campaigns.length > 0 ? `item-1` : undefined}>
               {campaigns.map((campaign, index) => (
                 <AccordionItem key={campaign.id} value={`item-${index + 1}`}>
                    <div className="flex w-full items-center justify-between border-b">
@@ -213,7 +216,7 @@ export default function LeadsPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleStartCampaign(campaign)}
-                          disabled={runningCampaign === campaign.id || campaign.leads.length === 0}
+                          disabled={runningCampaign === campaign.id || !campaign.leads || campaign.leads.length === 0}
                         >
                           {runningCampaign === campaign.id ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
