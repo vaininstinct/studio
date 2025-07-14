@@ -35,23 +35,21 @@ export default function LeadsPage() {
         <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
           {mockCampaigns.map((campaign, index) => (
             <AccordionItem key={campaign.id} value={`item-${index + 1}`}>
-              <AccordionTrigger className="text-lg font-medium hover:no-underline">
-                <div className="flex w-full items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span>{campaign.name}</span>
-                    <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
-                      {campaign.leads.length} Leads
-                    </span>
-                  </div>
+               <div className="flex w-full items-center justify-between border-b">
+                 <AccordionTrigger className="flex-1 text-left text-lg font-medium hover:no-underline">
+                    <div className="flex items-center gap-3">
+                      <span>{campaign.name}</span>
+                      <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
+                        {campaign.leads.length} Leads
+                      </span>
+                    </div>
+                  </AccordionTrigger>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation(); // prevent accordion from toggling
-                      handleStartCampaign(campaign.id, campaign.name);
-                    }}
+                    onClick={() => handleStartCampaign(campaign.id, campaign.name)}
                     disabled={runningCampaign === campaign.id}
-                    className="mr-2"
+                    className="mr-2 shrink-0"
                   >
                     {runningCampaign === campaign.id ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -61,7 +59,6 @@ export default function LeadsPage() {
                     Start Campaign
                   </Button>
                 </div>
-              </AccordionTrigger>
               <AccordionContent className="pt-2">
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {campaign.leads.map((lead) => (
