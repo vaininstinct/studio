@@ -71,9 +71,17 @@ export default function LeadsPage() {
     if (!user) return;
 
     try {
-      // Create campaign in DB first to get an ID
+      // 1. Create campaign shell and update UI immediately
       const newCampaignData = await createDbCampaign(campaignName, user.uid);
-      
+      const tempCampaign: Campaign = { ...newCampaignData, leads: [] };
+      setCampaigns(prev => [tempCampaign, ...prev]);
+
+      toast({
+         title: "Campaign Created",
+         description: `Successfully created "${campaignName}". Now adding leads...`
+      });
+
+      // 2. Prepare leads
       const newLeads: Lead[] = usernames.map(username => ({
         id: Math.random().toString(36).substring(2, 9), // simple unique id
         username: username,
@@ -83,16 +91,12 @@ export default function LeadsPage() {
         latestPostImageUrl: 'https://placehold.co/300x300.png'
       }));
       
-      // Add leads to the campaign in DB
+      // 3. Add leads to the campaign in DB (in the background)
       await addLeadsToCampaign(newCampaignData.id, newLeads);
 
+      // 4. Update the campaign in the UI with the new leads
       const finalCampaign: Campaign = { ...newCampaignData, leads: newLeads };
-      setCampaigns(prev => [finalCampaign, ...prev]);
-
-      toast({
-         title: "Campaign Created",
-         description: `Successfully created "${campaignName}" with ${newLeads.length} leads.`
-      });
+      setCampaigns(prev => prev.map(c => c.id === finalCampaign.id ? finalCampaign : c));
 
     } catch (error) {
       console.error("Campaign creation failed:", error);
