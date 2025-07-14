@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 function InstagramIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -28,64 +27,89 @@ function InstagramIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+interface Account {
+  id: number;
+  username: string;
+  avatar: string;
+  name: string;
+}
+
+const initialAccounts: Account[] = [
+  { id: 1, username: '@your_username', name: 'Your Awesome Brand', avatar: 'https://placehold.co/100x100/673AB7/FFFFFF.png' },
+];
+
+
 export function AccountConnection() {
-  const [status, setStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
-  const isLoading = status === 'connecting';
+  const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   const handleConnect = async () => {
-    setStatus('connecting');
+    setIsConnecting(true);
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    setStatus('connected');
+    const newId = accounts.length > 0 ? Math.max(...accounts.map(a => a.id)) + 1 : 1;
+    const newUsernames = ['@new_profile', '@another_brand', '@insta_growth'];
+    const newNames = ['New Profile', 'Another Brand', 'Insta Growth'];
+    const newAvatars = [
+        'https://placehold.co/100x100/3F51B5/FFFFFF.png',
+        'https://placehold.co/100x100/E91E63/FFFFFF.png',
+        'https://placehold.co/100x100/4CAF50/FFFFFF.png'
+    ];
+    const randomIndex = Math.floor(Math.random() * newUsernames.length);
+
+    setAccounts(prev => [...prev, {
+        id: newId,
+        username: newUsernames[randomIndex],
+        name: newNames[randomIndex],
+        avatar: newAvatars[randomIndex]
+    }]);
+    setIsConnecting(false);
   };
 
-  const handleDisconnect = () => {
-    setStatus('disconnected');
+  const handleDisconnect = (accountId: number) => {
+    setAccounts(prev => prev.filter(account => account.id !== accountId));
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Instagram Account</CardTitle>
+        <CardTitle>Instagram Accounts</CardTitle>
         <CardDescription>
-          Connect your Instagram account to send personalized direct messages to your leads.
+          Connect your Instagram accounts to send personalized direct messages to your leads.
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        {status === 'connected' && (
-          <div className="flex items-center gap-4 rounded-lg border bg-secondary/50 p-4">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src="https://placehold.co/100x100.png" data-ai-hint="profile avatar" alt="@your_username" />
-              <AvatarFallback>U</AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="font-semibold">Your Awesome Brand</p>
-              <p className="text-sm text-muted-foreground">@your_username</p>
+      <CardContent className="space-y-4">
+        {accounts.length > 0 ? (
+          accounts.map(account => (
+            <div key={account.id} className="flex items-center justify-between gap-4 rounded-lg border bg-secondary/50 p-4">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={account.avatar} data-ai-hint="profile avatar" alt={account.username} />
+                  <AvatarFallback>{account.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-semibold">{account.name}</p>
+                  <p className="text-sm text-muted-foreground">{account.username}</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => handleDisconnect(account.id)}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+                <span className="sr-only">Disconnect {account.username}</span>
+              </Button>
             </div>
-          </div>
+          ))
+        ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">No accounts connected.</p>
         )}
       </CardContent>
       <CardFooter className="border-t px-6 py-4">
-        <div className="flex w-full items-center justify-between">
-          <p
-            className={cn(
-              'text-sm text-muted-foreground',
-              status === 'connected' && 'text-green-600'
-            )}
-          >
-            {status === 'connected' ? 'Connected' : 'Not connected'}
-          </p>
-          {status === 'connected' ? (
-            <Button variant="destructive" onClick={handleDisconnect}>
-              Disconnect
-            </Button>
-          ) : (
-            <Button onClick={handleConnect} disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button onClick={handleConnect} disabled={isConnecting} className="w-full">
+            {isConnecting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
               <InstagramIcon className="mr-2 h-4 w-4" />
-              Connect Account
-            </Button>
-          )}
-        </div>
+            )}
+            Connect New Account
+          </Button>
       </CardFooter>
     </Card>
   );

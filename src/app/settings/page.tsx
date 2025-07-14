@@ -1,4 +1,5 @@
 import { AccountConnection } from '@/components/settings/account-connection';
+import { ProxySettings } from '@/components/settings/proxy-settings';
 
 export default function SettingsPage() {
   return (
@@ -9,6 +10,7 @@ export default function SettingsPage() {
       <main className="flex-1 p-4 md:p-6">
         <div className="mx-auto max-w-2xl space-y-6">
           <AccountConnection />
+          <ProxySettings />
         </div>
       </main>
     </div>
