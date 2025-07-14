@@ -1,5 +1,7 @@
 import { AccountConnection } from '@/components/settings/account-connection';
 import { ProxySettings } from '@/components/settings/proxy-settings';
+import { PasswordSettings } from '@/components/settings/password-settings';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function SettingsPage() {
   return (
@@ -9,6 +11,7 @@ export default function SettingsPage() {
       </header>
       <main className="flex-1 p-4 md:p-6">
         <div className="mx-auto max-w-2xl space-y-6">
+          <PasswordSettings />
           <AccountConnection />
           <ProxySettings />
         </div>
