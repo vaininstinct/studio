@@ -7,70 +7,78 @@ export interface Lead {
   latestPostImageUrl?: string;
 }
 
-export const mockLeads: Lead[] = [
+export interface Campaign {
+  id: string;
+  name: string;
+  niche: string;
+  leads: Lead[];
+}
+
+
+export const mockCampaigns: Campaign[] = [
   {
-    id: '1',
-    name: 'Alice Johnson',
-    username: 'alicej',
-    avatarUrl: 'https://placehold.co/100x100/673AB7/FFFFFF.png',
-    bio: 'Photographer & Traveler 📸✈️. Exploring the world one click at a time. DM for collabs!',
-    latestPostImageUrl: 'https://placehold.co/400x400.png',
+    id: 'campaign-1',
+    name: 'SaaS Founders',
+    niche: 'Software as a Service',
+    leads: [
+      {
+        id: '1',
+        name: 'Alice Johnson',
+        username: 'alicej',
+        avatarUrl: 'https://placehold.co/100x100/673AB7/FFFFFF.png',
+        bio: 'Founder of @SaaSify. Building tools for the future. 🚀',
+        latestPostImageUrl: 'https://placehold.co/400x400.png',
+      },
+      {
+        id: '3',
+        name: 'Charlie Brown',
+        username: 'charlieb',
+        avatarUrl: 'https://placehold.co/100x100/FFC107/FFFFFF.png',
+        bio: 'Co-founder & CEO at @LeadGenius. We help you find your next customer. #SaaS',
+        latestPostImageUrl: 'https://placehold.co/400x400.png',
+      },
+      {
+        id: '4',
+        name: 'Diana Miller',
+        username: 'dianam',
+        avatarUrl: 'https://placehold.co/100x100/E91E63/FFFFFF.png',
+        bio: 'Building in public. Founder of @StyleUp, a fashion tech SaaS. Sharing my journey through style.',
+        latestPostImageUrl: 'https://placehold.co/400x400.png',
+      },
+    ]
   },
   {
-    id: '2',
-    name: 'Bob Williams',
-    username: 'bobw',
-    avatarUrl: 'https://placehold.co/100x100/3F51B5/FFFFFF.png',
-    bio: 'Fitness coach and nutritionist. Helping you become the best version of yourself. #fitness #health',
-    latestPostImageUrl: 'https://placehold.co/400x400.png',
-  },
-  {
-    id: '3',
-    name: 'Charlie Brown',
-    username: 'charlieb',
-    avatarUrl: 'https://placehold.co/100x100/FFC107/FFFFFF.png',
-    bio: 'Digital artist and illustrator. Bringing ideas to life with color and pixels. Open for commissions.',
-    latestPostImageUrl: 'https://placehold.co/400x400.png',
-  },
-  {
-    id: '4',
-    name: 'Diana Miller',
-    username: 'dianam',
-    avatarUrl: 'https://placehold.co/100x100/E91E63/FFFFFF.png',
-    bio: 'Founder @StyleUp. Fashion enthusiast and blogger. Sharing my journey through style.',
-    latestPostImageUrl: 'https://placehold.co/400x400.png',
-  },
-  {
-    id: '5',
-    name: 'Ethan Davis',
-    username: 'ethand',
-    avatarUrl: 'https://placehold.co/100x100/4CAF50/FFFFFF.png',
-    bio: 'Musician and producer. Creating sounds for the soul. 🎸🎹',
-    latestPostImageUrl: 'https://placehold.co/400x400.png',
-  },
-  {
-    id: '6',
-    name: 'Fiona Garcia',
-    username: 'fionag',
-    avatarUrl: 'https://placehold.co/100x100/9C27B0/FFFFFF.png',
-    bio: 'Chef and food blogger. On a mission to find the best tacos in the world. 🌮',
-  },
-  {
-    id: '7',
-    name: 'George Rodriguez',
-    username: 'georger',
-    avatarUrl: 'https://placehold.co/100x100/00BCD4/FFFFFF.png',
-    bio: 'Real estate agent based in Miami. Helping you find your dream home. 🏡',
-    latestPostImageUrl: 'https://placehold.co/400x400.png',
-  },
-  {
-    id: '8',
-    name: 'Hannah Wilson',
-    username: 'hannahw',
-    avatarUrl: 'https://placehold.co/100x100/FF9800/FFFFFF.png',
-    bio: 'Yoga instructor and wellness advocate. Finding balance on and off the mat. 🧘‍♀️',
-  },
+    id: 'campaign-2',
+    name: 'Fitness Coaches',
+    niche: 'Health & Wellness',
+    leads: [
+       {
+        id: '2',
+        name: 'Bob Williams',
+        username: 'bobw',
+        avatarUrl: 'https://placehold.co/100x100/3F51B5/FFFFFF.png',
+        bio: 'Fitness coach and nutritionist. Helping you become the best version of yourself. #fitness #health',
+        latestPostImageUrl: 'https://placehold.co/400x400.png',
+      },
+      {
+        id: '8',
+        name: 'Hannah Wilson',
+        username: 'hannahw',
+        avatarUrl: 'https://placehold.co/100x100/FF9800/FFFFFF.png',
+        bio: 'Yoga instructor and wellness advocate. Finding balance on and off the mat. 🧘‍♀️',
+      },
+       {
+        id: '5',
+        name: 'Ethan Davis',
+        username: 'ethand',
+        avatarUrl: 'https://placehold.co/100x100/4CAF50/FFFFFF.png',
+        bio: 'Online fitness coach. Get fit from home. DM for personal training plans.',
+        latestPostImageUrl: 'https://placehold.co/400x400.png',
+      },
+    ]
+  }
 ];
+
 
 export type ChartConfig = {
   [k in string]: {
