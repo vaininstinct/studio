@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { ExtractLeadsDialog } from '@/components/leads/extract-leads-dialog';
 import type { Campaign } from '@/lib/data';
 import { LeadCard } from '@/components/leads/lead-card';
+import { CampaignStatus } from '@/components/leads/campaign-status';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { PlayCircle, Loader2 } from 'lucide-react';
@@ -27,7 +28,7 @@ export default function LeadsPage() {
       try {
         setIsLoading(true);
         const userCampaigns = await getCampaigns(user.uid);
-        setCampaigns(userCampaigns);
+        setCampaigns(userCampaigns.map(c => ({...c, status: 'idle'})));
       } catch (error) {
         console.error("Error fetching campaigns:", error);
         toast({
@@ -56,7 +57,35 @@ export default function LeadsPage() {
   };
 
   const onCampaignCreated = (newCampaign: Campaign) => {
-    setCampaigns(prev => [newCampaign, ...prev]);
+    const campaignWithStatus: Campaign = { ...newCampaign, status: 'extracting', progress: 0, statusText: 'Initializing...' };
+    setCampaigns(prev => [campaignWithStatus, ...prev]);
+
+    // Simulate extraction progress
+    const steps = [
+      { progress: 25, statusText: 'Checking account visibility...' },
+      { progress: 50, statusText: 'Extracting followers...' },
+      { progress: 75, statusText: 'Filtering leads...' },
+      { progress: 100, statusText: 'Extraction complete!' },
+    ];
+    let currentStep = 0;
+    const interval = setInterval(() => {
+      setCampaigns(prev => prev.map(c => 
+        c.id === newCampaign.id ? { ...c, progress: steps[currentStep].progress, statusText: steps[currentStep].statusText } : c
+      ));
+      currentStep++;
+      if (currentStep >= steps.length) {
+        clearInterval(interval);
+         setTimeout(() => {
+           setCampaigns(prev => prev.map(c => 
+            c.id === newCampaign.id ? { ...c, status: 'idle' } : c
+          ));
+          toast({
+            title: "Extraction Complete",
+            description: `Finished extracting leads for "${newCampaign.name}".`
+          })
+        }, 1000);
+      }
+    }, 1500);
   };
 
   if (isLoading) {
@@ -90,18 +119,23 @@ export default function LeadsPage() {
               <AccordionItem key={campaign.id} value={`item-${index + 1}`}>
                  <div className="flex w-full items-center justify-between border-b">
                    <AccordionTrigger className="flex-1 text-left text-lg font-medium hover:no-underline">
-                      <div className="flex items-center gap-3">
-                        <span>{campaign.name}</span>
-                        <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
-                          {campaign.leads.length} Leads
-                        </span>
+                      <div className="flex w-full flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
+                        <div className="flex items-center gap-3">
+                          <span>{campaign.name}</span>
+                          <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
+                            {campaign.leads.length} Leads
+                          </span>
+                        </div>
+                        {campaign.status === 'extracting' && (
+                          <CampaignStatus progress={campaign.progress} statusText={campaign.statusText} />
+                        )}
                       </div>
                     </AccordionTrigger>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleStartCampaign(campaign.id, campaign.name)}
-                      disabled={runningCampaign === campaign.id}
+                      disabled={runningCampaign === campaign.id || campaign.status === 'extracting'}
                       className="mr-2 shrink-0"
                     >
                       {runningCampaign === campaign.id ? (
@@ -121,7 +155,9 @@ export default function LeadsPage() {
                     </div>
                   ) : (
                     <div className="py-8 text-center text-muted-foreground">
-                      No leads in this campaign yet. Extract some to get started.
+                      {campaign.status === 'extracting'
+                        ? 'Extracting new leads...'
+                        : 'No leads in this campaign yet. Extract some to get started.'}
                     </div>
                   )}
                 </AccordionContent>

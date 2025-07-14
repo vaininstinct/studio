@@ -14,6 +14,9 @@ export interface Campaign {
   leads: Lead[];
   userId: string;
   createdAt: any; // Firestore timestamp
+  status: 'idle' | 'extracting';
+  progress?: number;
+  statusText?: string;
 }
 
 
