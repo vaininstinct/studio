@@ -161,19 +161,19 @@ export function ExtractLeadsDialog({ onCampaignCreated, campaigns }: ExtractLead
             </TabsList>
               <TabsContent value="followers" className="space-y-4 pt-2">
                 <div className="space-y-2">
-                  <Label htmlFor="followers-username">Target Account Username</Label>
-                  <Input id="followers-username" name="target" placeholder="@username" required />
+                  <Label htmlFor="followers-username">Target Instagram Username</Label>
+                  <Input id="followers-username" name="target" placeholder="@instagram_username" required />
                 </div>
               </TabsContent>
               <TabsContent value="likes" className="space-y-4 pt-2">
                 <div className="space-y-2">
-                  <Label htmlFor="likes-post-url">Post URL</Label>
+                  <Label htmlFor="likes-post-url">Instagram Post URL</Label>
                   <Input id="likes-post-url" name="target" placeholder="https://www.instagram.com/p/..." required />
                 </div>
               </TabsContent>
               <TabsContent value="comments" className="space-y-4 pt-2">
                 <div className="space-y-2">
-                  <Label htmlFor="comments-post-url">Post URL</Label>
+                  <Label htmlFor="comments-post-url">Instagram Post URL</Label>
                   <Input id="comments-post-url" name="target" placeholder="https://www.instagram.com/p/..." required />
                 </div>
               </TabsContent>
