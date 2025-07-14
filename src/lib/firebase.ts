@@ -7,7 +7,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyAbeywq1-05iTmwu00MUPF6w8mUiPU_mDQ",
   authDomain: "instaleadflow.firebaseapp.com",
   projectId: "instaleadflow",
-  storageBucket: "instaleadflow.appspot.com",
+  storageBucket: "instaleadflow.firebasestorage.app",
   messagingSenderId: "490352429220",
   appId: "1:490352429220:web:fc5bca94bc2d9a0195fe31"
 };
