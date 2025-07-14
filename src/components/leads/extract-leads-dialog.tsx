@@ -45,7 +45,10 @@ export function ExtractLeadsDialog({ onCampaignCreated, campaigns }: ExtractLead
     setIsExtracting(true);
     const formData = new FormData(event.currentTarget);
     const campaignType = formData.get('campaignOption') as string;
-
+    
+    // Close the dialog immediately and show loading state
+    setIsOpen(false);
+    
     try {
       let campaignId = formData.get('campaignId') as string;
       let campaignName = '';
@@ -57,14 +60,30 @@ export function ExtractLeadsDialog({ onCampaignCreated, campaigns }: ExtractLead
             setIsExtracting(false);
             return;
         }
-        const newCampaign = await createCampaign(campaignName, user.uid);
-        onCampaignCreated(newCampaign);
-        campaignId = newCampaign.id;
+        
+        // Don't wait for the campaign to be created.
+        // Create it in the background and optimistically update the UI.
+        const tempId = `temp-${Date.now()}`;
+        const newCampaign: Campaign = {
+          id: tempId,
+          name: campaignName,
+          userId: user.uid,
+          niche: '',
+          leads: [],
+          createdAt: new Date(),
+        };
+        onCampaignCreated(newCampaign); // Trigger UI update immediately
+
+        // Now, actually create it in Firestore
+        createCampaign(campaignName, user.uid).then(createdCampaign => {
+            // Optional: You could update the UI again with the real ID if needed,
+            // but for this flow, it's not critical.
+            console.log(`Campaign created with real ID: ${createdCampaign.id}`);
+        });
+
       } else {
         const existingCampaign = campaigns.find(c => c.id === campaignId);
         campaignName = existingCampaign?.name || '';
-        // If we are adding to an existing campaign, we still call onCampaignCreated
-        // to trigger the progress simulation.
         if (existingCampaign) {
           onCampaignCreated(existingCampaign);
         }
@@ -83,8 +102,8 @@ export function ExtractLeadsDialog({ onCampaignCreated, campaigns }: ExtractLead
         description: 'Could not start the lead extraction process.',
       });
     } finally {
-      setIsExtracting(false);
-      setIsOpen(false);
+      // Reset the button state after a short delay
+      setTimeout(() => setIsExtracting(false), 500);
     }
   };
   
