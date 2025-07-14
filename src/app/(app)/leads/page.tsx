@@ -99,14 +99,10 @@ export default function LeadsPage() {
   const onCampaignCreated = async (campaignName: string) => {
     if (!user) return;
 
-    // Create campaign in DB first to get a real ID
     const newCampaign = await createDbCampaign(campaignName, user.uid);
-    
-    // Add campaign to state with 'extracting' status
     const campaignWithStatus: Campaign = { ...newCampaign, status: 'extracting', progress: 0, statusText: 'Initializing...' };
     setCampaigns(prev => [campaignWithStatus, ...prev]);
   
-    // Simulate extraction progress
     const steps = [
       { progress: 25, statusText: 'Checking account visibility...' },
       { progress: 50, statusText: 'Extracting followers...' },
@@ -116,17 +112,14 @@ export default function LeadsPage() {
     let currentStep = 0;
     
     const interval = setInterval(() => {
-      // Check for completion at the beginning of the interval
       if (currentStep >= steps.length) {
         clearInterval(interval);
         
         const newLeads = generateMockLeads(8);
         
-        // Update UI immediately
         setCampaigns(prev => {
             return prev.map(c => {
               if (c.id === newCampaign.id) {
-                // Save to firestore in the background
                 addLeadsToCampaign(newCampaign.id, newLeads).catch(error => {
                   console.error("Failed to save leads to database:", error);
                   toast({
@@ -145,15 +138,13 @@ export default function LeadsPage() {
            title: "Extraction Complete",
            description: `Finished extracting leads for "${newCampaign.name}".`
         });
-        return; // Stop execution for this interval
+        return;
       }
       
-      // If not complete, update the progress
       setCampaigns(prev => prev.map(c => 
         c.id === newCampaign.id ? { ...c, progress: steps[currentStep].progress, statusText: steps[currentStep].statusText } : c
       ));
       
-      // Increment for the next interval
       currentStep++;
 
     }, 1500);
@@ -213,7 +204,7 @@ export default function LeadsPage() {
               {campaigns.map((campaign, index) => (
                 <AccordionItem key={campaign.id} value={`item-${index + 1}`}>
                    <div className="flex w-full items-center justify-between border-b">
-                     <AccordionTrigger className="flex-1 text-left text-lg font-medium hover:no-underline">
+                     <AccordionTrigger className="flex-1 text-left text-lg font-medium hover:no-underline pr-2">
                         <div className="flex w-full flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
                           <div className="flex items-center gap-3">
                             <span>{campaign.name}</span>
@@ -226,7 +217,7 @@ export default function LeadsPage() {
                           )}
                         </div>
                       </AccordionTrigger>
-                      <div className="mr-2 shrink-0 flex items-center gap-1">
+                      <div className="mr-4 shrink-0 flex items-center gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
