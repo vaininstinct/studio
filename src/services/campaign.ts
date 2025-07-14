@@ -1,13 +1,12 @@
 import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
 import type { Campaign, Lead } from '@/lib/data';
-import { useAuth } from '@/context/auth-context';
 
 /**
  * Creates a new campaign in Firestore for the current user.
  * @param campaignName The name of the new campaign.
  * @param userId The ID of the user creating the campaign.
- * @returns The newly created campaign object.
+ * @returns The newly created campaign object with its database ID.
  */
 export async function createCampaign(campaignName: string, userId: string): Promise<Campaign> {
   const campaignRef = await addDoc(collection(db, 'campaigns'), {
@@ -18,14 +17,16 @@ export async function createCampaign(campaignName: string, userId: string): Prom
     createdAt: serverTimestamp(),
   });
 
-  return {
+  const newCampaign: Campaign = {
     id: campaignRef.id,
     name: campaignName,
     userId: userId,
     niche: '',
     leads: [],
     createdAt: new Date(), // Use client-side date for immediate UI update
+    status: 'extracting',
   };
+  return newCampaign;
 }
 
 /**
@@ -42,12 +43,18 @@ export async function getCampaigns(userId: string): Promise<Campaign[]> {
     const data = doc.data();
     campaigns.push({
       id: doc.id,
-      ...data
+      ...data,
+      // Ensure leads is always an array
+      leads: data.leads || [],
     } as Campaign);
   });
   
   // Sort by creation date, newest first
-  campaigns.sort((a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
+  campaigns.sort((a, b) => {
+    const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+    const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+    return dateB.getTime() - dateA.getTime();
+  });
 
   return campaigns;
 }

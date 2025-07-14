@@ -85,7 +85,12 @@ export default function LeadsPage() {
     });
   };
 
-  const onCampaignCreated = (newCampaign: Campaign) => {
+  const onCampaignCreated = async (campaignName: string) => {
+    if (!user) return;
+
+    // Create campaign in DB first to get a real ID
+    const newCampaign = await createDbCampaign(campaignName, user.uid);
+    
     // Add campaign to state with 'extracting' status
     const campaignWithStatus: Campaign = { ...newCampaign, status: 'extracting', progress: 0, statusText: 'Initializing...' };
     setCampaigns(prev => [campaignWithStatus, ...prev]);
@@ -100,16 +105,18 @@ export default function LeadsPage() {
     let currentStep = 0;
     
     const interval = setInterval(() => {
+      // Check for completion at the beginning of the interval
       if (currentStep >= steps.length) {
         clearInterval(interval);
         
         const newLeads = generateMockLeads(8);
         
+        // Update UI immediately
         setCampaigns(prev => {
-            const campaignToUpdate = prev.find(c => c.id === newCampaign.id);
-            if (campaignToUpdate) {
+            return prev.map(c => {
+              if (c.id === newCampaign.id) {
                 // Save to firestore in the background
-                addLeadsToCampaign(campaignToUpdate.id, newLeads).catch(error => {
+                addLeadsToCampaign(newCampaign.id, newLeads).catch(error => {
                   console.error("Failed to save leads to database:", error);
                   toast({
                     variant: "destructive",
@@ -117,11 +124,6 @@ export default function LeadsPage() {
                     description: "Could not save new leads."
                   });
                 });
-            }
-
-            // Update UI immediately
-            return prev.map(c => {
-              if (c.id === newCampaign.id) {
                 return { ...c, status: 'idle', leads: [...(c.leads || []), ...newLeads] };
               }
               return c;
@@ -132,12 +134,15 @@ export default function LeadsPage() {
            title: "Extraction Complete",
            description: `Finished extracting leads for "${newCampaign.name}".`
         });
-        return;
+        return; // Stop execution for this interval
       }
       
+      // If not complete, update the progress
       setCampaigns(prev => prev.map(c => 
         c.id === newCampaign.id ? { ...c, progress: steps[currentStep].progress, statusText: steps[currentStep].statusText } : c
       ));
+      
+      // Increment for the next interval
       currentStep++;
 
     }, 1500);

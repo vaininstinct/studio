@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,79 +14,51 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, PlusCircle, Search, UserCheck, Users, Hash, MapPin, Heart } from 'lucide-react';
+import { Loader2, PlusCircle, Search, UserCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { Campaign } from '@/lib/data';
-import { useAuth } from '@/context/auth-context';
-import { createCampaign } from '@/services/campaign';
 
 interface ExtractLeadsDialogProps {
-  onCampaignCreated: (campaign: Campaign) => void;
+  onCampaignCreated: (campaignName: string) => void;
 }
 
 export function ExtractLeadsDialog({ onCampaignCreated }: ExtractLeadsDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [campaignName, setCampaignName] = useState('');
+  const [target, setTarget] = useState('');
   const { toast } = useToast();
-  const { user } = useAuth();
 
   const handleExtract = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!user) {
-      toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
-      return;
-    }
-
     setIsExtracting(true);
-    const formData = new FormData(event.currentTarget);
-    const campaignName = formData.get('campaignName') as string;
-    const target = formData.get('target') as string;
 
-    if (!campaignName) {
+    if (!campaignName.trim()) {
       toast({ variant: 'destructive', title: 'Error', description: 'Please provide a campaign name.' });
       setIsExtracting(false);
       return;
     }
     
-    if (!target) {
+    if (!target.trim()) {
         toast({ variant: 'destructive', title: 'Error', description: 'Please provide a target Instagram account.' });
         setIsExtracting(false);
         return;
     }
 
+    // Close dialog and reset state
     setIsOpen(false);
     
     try {
-        // Create a temporary campaign object for immediate UI feedback
-        const tempCampaign: Campaign = {
-          id: `temp-${Date.now()}`,
-          name: campaignName,
-          userId: user.uid,
-          niche: '',
-          leads: [],
-          createdAt: new Date(),
-          status: 'extracting',
-        };
-        onCampaignCreated(tempCampaign);
-
-        // Create the campaign in Firestore in the background
-        createCampaign(campaignName, user.uid).then(createdCampaign => {
-            console.log(`Campaign created with real ID: ${createdCampaign.id}`);
-            // Here you could update the temporary campaign with the real one if needed,
-            // but for now we'll just let the simulation run with the temp one.
-        }).catch(error => {
-            console.error("Failed to create campaign in database:", error);
-            toast({
-                variant: "destructive",
-                title: "Database Error",
-                description: "Could not save the new campaign."
-            });
-        });
+      // Call the parent handler to start the process
+      onCampaignCreated(campaignName);
       
       toast({
         title: 'Extraction Started',
         description: `We are extracting new leads for the "${campaignName}" campaign.`,
       });
+
+      // Reset fields for the next time the dialog is opened
+      setCampaignName('');
+      setTarget('');
       
     } catch (error) {
       console.error(error);
@@ -96,6 +68,7 @@ export function ExtractLeadsDialog({ onCampaignCreated }: ExtractLeadsDialogProp
         description: 'Could not start the lead extraction process.',
       });
     } finally {
+      // Set a small timeout to let the dialog close animation finish
       setTimeout(() => setIsExtracting(false), 500);
     }
   };
@@ -118,7 +91,14 @@ export function ExtractLeadsDialog({ onCampaignCreated }: ExtractLeadsDialogProp
         <form onSubmit={handleExtract} className="space-y-4">
             <div className="space-y-2">
                 <Label htmlFor="campaignName">Campaign Name</Label>
-                <Input id="campaignName" name="campaignName" placeholder="e.g. March Fitness Outreach" required />
+                <Input 
+                    id="campaignName" 
+                    name="campaignName" 
+                    placeholder="e.g. March Fitness Outreach" 
+                    required 
+                    value={campaignName}
+                    onChange={(e) => setCampaignName(e.target.value)}
+                />
             </div>
             <div className="space-y-2">
                 <Label htmlFor="target">Target Instagram Account</Label>
@@ -130,6 +110,8 @@ export function ExtractLeadsDialog({ onCampaignCreated }: ExtractLeadsDialogProp
                         placeholder="e.g. @username or full profile URL" 
                         required 
                         className="pl-10"
+                        value={target}
+                        onChange={(e) => setTarget(e.target.value)}
                     />
                 </div>
             </div>
