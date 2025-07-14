@@ -15,10 +15,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, PlusCircle, Search } from 'lucide-react';
+import { Loader2, PlusCircle, Search, UserCheck, Users, Hash, MapPin, Heart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Slider } from '@/components/ui/slider';
 import type { Campaign } from '@/lib/data';
 import { useAuth } from '@/context/auth-context';
 import { createCampaign } from '@/services/campaign';
@@ -32,6 +35,9 @@ export function ExtractLeadsDialog({ onCampaignCreated, campaigns }: ExtractLead
   const [isOpen, setIsOpen] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [campaignOption, setCampaignOption] = useState(campaigns.length > 0 ? 'existing' : 'new');
+  const [limitEnabled, setLimitEnabled] = useState(true);
+  const [limitAmount, setLimitAmount] = useState([5000]);
+  const [waitInterval, setWaitInterval] = useState([15]);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -46,7 +52,6 @@ export function ExtractLeadsDialog({ onCampaignCreated, campaigns }: ExtractLead
     const formData = new FormData(event.currentTarget);
     const campaignType = formData.get('campaignOption') as string;
     
-    // Close the dialog immediately and show loading state
     setIsOpen(false);
     
     try {
@@ -61,8 +66,6 @@ export function ExtractLeadsDialog({ onCampaignCreated, campaigns }: ExtractLead
             return;
         }
         
-        // Don't wait for the campaign to be created.
-        // Create it in the background and optimistically update the UI.
         const tempId = `temp-${Date.now()}`;
         const newCampaign: Campaign = {
           id: tempId,
@@ -72,12 +75,9 @@ export function ExtractLeadsDialog({ onCampaignCreated, campaigns }: ExtractLead
           leads: [],
           createdAt: new Date(),
         };
-        onCampaignCreated(newCampaign); // Trigger UI update immediately
+        onCampaignCreated(newCampaign);
 
-        // Now, actually create it in Firestore
         createCampaign(campaignName, user.uid).then(createdCampaign => {
-            // Optional: You could update the UI again with the real ID if needed,
-            // but for this flow, it's not critical.
             console.log(`Campaign created with real ID: ${createdCampaign.id}`);
         });
 
@@ -102,12 +102,10 @@ export function ExtractLeadsDialog({ onCampaignCreated, campaigns }: ExtractLead
         description: 'Could not start the lead extraction process.',
       });
     } finally {
-      // Reset the button state after a short delay
       setTimeout(() => setIsExtracting(false), 500);
     }
   };
   
-  // Effect to update the default radio option if campaigns become available
   useEffect(() => {
     if (campaigns.length > 0) {
       setCampaignOption('existing');
@@ -128,89 +126,73 @@ export function ExtractLeadsDialog({ onCampaignCreated, campaigns }: ExtractLead
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Extract New Leads</DialogTitle>
-          <DialogDescription>
-            Target and filter new leads from Instagram. The extraction process will run in the background.
-          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleExtract}>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Campaign</Label>
-              <RadioGroup name="campaignOption" defaultValue={campaignOption} value={campaignOption} onValueChange={setCampaignOption} className="flex gap-4">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="existing" id="r1" disabled={campaigns.length === 0} />
-                  <Label htmlFor="r1">Add to Existing</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="new" id="r2" />
-                  <Label htmlFor="r2">Create New</Label>
-                </div>
-              </RadioGroup>
-            </div>
-            {campaignOption === 'existing' ? (
-              <div className="space-y-2">
-                <Label htmlFor="campaign-select">Select Campaign</Label>
-                <Select name="campaignId" required>
-                  <SelectTrigger id="campaign-select">
-                    <SelectValue placeholder="Select a campaign" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {campaigns.map(c => (
-                       <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                 {campaigns.length === 0 && (
-                  <p className="text-xs text-muted-foreground">You don't have any campaigns yet. Select "Create New" to start.</p>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label htmlFor="new-campaign-name">New Campaign Name</Label>
-                <Input id="new-campaign-name" name="newCampaignName" placeholder="e.g., Real Estate Agents" required />
-              </div>
-            )}
-          </div>
-
-          <Tabs defaultValue="followers" className="pt-4">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="followers">From Followers</TabsTrigger>
-              <TabsTrigger value="likes">From Likes</TabsTrigger>
-              <TabsTrigger value="comments">From Comments</TabsTrigger>
+          <Tabs defaultValue="followers">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="followers" className="h-12"><UserCheck /></TabsTrigger>
+              <TabsTrigger value="following" className="h-12"><Users /></TabsTrigger>
+              <TabsTrigger value="hashtags" className="h-12"><Hash /></TabsTrigger>
+              <TabsTrigger value="locations" className="h-12"><MapPin /></TabsTrigger>
+              <TabsTrigger value="interactors" className="h-12"><Heart /></TabsTrigger>
             </TabsList>
-              <TabsContent value="followers" className="space-y-4 pt-2">
-                <div className="space-y-2">
-                  <Label htmlFor="followers-username">Target Instagram Username</Label>
-                  <Input id="followers-username" name="target" placeholder="@instagram_username" required />
-                </div>
-              </TabsContent>
-              <TabsContent value="likes" className="space-y-4 pt-2">
-                <div className="space-y-2">
-                  <Label htmlFor="likes-post-url">Instagram Post URL</Label>
-                  <Input id="likes-post-url" name="target" placeholder="https://www.instagram.com/p/..." required />
-                </div>
-              </TabsContent>
-              <TabsContent value="comments" className="space-y-4 pt-2">
-                <div className="space-y-2">
-                  <Label htmlFor="comments-post-url">Instagram Post URL</Label>
-                  <Input id="comments-post-url" name="target" placeholder="https://www.instagram.com/p/..." required />
-                </div>
-              </TabsContent>
+            <TabsContent value="followers" className="space-y-4 pt-4">
+                <h3 className="font-semibold">Extract followers of</h3>
+                <RadioGroup defaultValue="other" className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="me" id="me" />
+                    <Label htmlFor="me">Me &lt;@your_username&gt;</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="other" id="other" />
+                    <Label htmlFor="other" className="flex-1">
+                      <Input name="target" placeholder="e.g. tottori or https://www.instagram.com/tottori/" required />
+                    </Label>
+                  </div>
+                </RadioGroup>
+            </TabsContent>
+            {/* Add other TabsContent sections as needed */}
           </Tabs>
-          <div className="space-y-2 pt-2">
-            <Label htmlFor="keywords">
-              Filter by Keywords in Bio/Profile
-            </Label>
-            <Input id="keywords" name="keywords" placeholder="e.g., coaching, smma, saas" />
+          
+          <div className="space-y-4 pt-4">
+              <div className="flex items-center space-x-2">
+                <Switch id="detailed-profile" defaultChecked/>
+                <Label htmlFor="detailed-profile">Detailed</Label>
+                <p className="text-xs text-muted-foreground bg-amber-100 dark:bg-amber-900/50 p-1 rounded-md">
+                    Detailed profile including bio, follower count, Email address, etc.
+                </p>
+              </div>
+            <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                    <Checkbox id="limit-extract" checked={limitEnabled} onCheckedChange={(checked) => setLimitEnabled(!!checked)}/>
+                    <Label htmlFor="limit-extract">Limit Max extract No. {limitAmount[0].toLocaleString()}</Label>
+                </div>
+                <Slider
+                    disabled={!limitEnabled}
+                    value={limitAmount}
+                    onValueChange={setLimitAmount}
+                    max={100000}
+                    step={100}
+                />
+            </div>
+             <div className="space-y-2">
+                <Label>Wait interval: {waitInterval[0]}s</Label>
+                <Slider
+                    value={waitInterval}
+                    onValueChange={setWaitInterval}
+                    max={60}
+                    step={1}
+                />
+            </div>
           </div>
+          
           <DialogFooter className="pt-6">
-            <Button type="submit" className="w-full" disabled={isExtracting}>
+            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white" disabled={isExtracting}>
               {isExtracting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <Search className="mr-2 h-4 w-4" />
+                'GO'
               )}
-              Start Extraction
             </Button>
           </DialogFooter>
         </form>
