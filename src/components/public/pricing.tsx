@@ -7,49 +7,44 @@ const tiers = [
     {
         name: 'Free',
         price: '$0',
-        period: 'month',
-        description: 'Get a feel for our platform with a 14-day trial.',
+        period: 'For getting started',
         features: [
             '1 Connected Instagram Account',
-            '25 AI-generated openers/day',
+            '25 AI-generated conversations / day',
             'Basic Lead Filtering',
             'Email Support'
         ],
-        cta: 'Start 14-Day Free Trial',
+        cta: 'Start 14-day free trial',
         href: '/signup',
-        variant: 'secondary' as const,
     },
     {
         name: 'Silver',
         price: '$49',
-        period: 'month',
-        description: 'Perfect for small businesses and solo entrepreneurs.',
+        period: 'For growing businesses',
         features: [
-            '3 Connected Instagram Accounts',
-            '500 AI-generated openers/day',
+            '5 Connected Instagram Accounts',
+            '150 AI-generated conversations / day',
             'Advanced Lead Filtering',
             'Priority Email Support'
         ],
-        cta: 'Get Started',
+        cta: 'Start 14-day free trial',
         href: '/signup',
-        variant: 'default' as const,
+        popular: true,
     },
     {
         name: 'Gold',
         price: '$99',
-        period: 'month',
-        description: 'For power users and agencies scaling their outreach.',
+        period: 'For power users & agencies',
         features: [
             'Unlimited Instagram Accounts',
-            'Unlimited AI-generated openers/day',
+            '500 AI-generated conversations / day',
             'Advanced Lead Filtering & Analytics',
-            'Dedicated Phone & Chat Support'
+            'Dedicated Phone & Email Support'
         ],
-        cta: 'Get Started',
+        cta: 'Start 14-day free trial',
         href: '/signup',
-        variant: 'default' as const,
-    }
-]
+    },
+];
 
 export function Pricing() {
     return (
@@ -57,24 +52,24 @@ export function Pricing() {
             <div className="container px-4 py-16 md:py-24">
                 <div className="mx-auto mb-12 max-w-2xl text-center">
                     <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-                        Find the Perfect Plan
+                        Simple, transparent pricing
                     </h2>
                     <p className="mt-4 text-lg text-muted-foreground">
-                        Start for free, then upgrade to a plan that fits your needs.
+                        Choose the plan that's right for you. Start your 14-day free trial today.
                     </p>
                 </div>
-                <div className="grid max-w-5xl mx-auto gap-8 md:grid-cols-3">
+                <div className="grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3 lg:mx-auto">
                     {tiers.map((tier) => (
-                        <Card key={tier.name} className={`flex flex-col ${tier.name === 'Silver' ? 'border-primary shadow-lg' : ''}`}>
+                        <Card key={tier.name} className={`flex flex-col ${tier.popular ? 'border-primary shadow-lg' : ''}`}>
                             <CardHeader>
                                 <CardTitle>{tier.name}</CardTitle>
-                                <div className="flex items-baseline gap-2">
+                                <CardDescription>{tier.period}</CardDescription>
+                                <div className="flex items-baseline gap-2 pt-2">
                                     <span className="text-4xl font-bold">{tier.price}</span>
-                                    <span className="text-muted-foreground">/ {tier.period}</span>
+                                    {tier.name !== 'Free' && <span className="text-muted-foreground">/ month</span>}
                                 </div>
-                                <CardDescription>{tier.description}</CardDescription>
                             </CardHeader>
-                            <CardContent className="flex-1 space-y-4">
+                            <CardContent className="flex-1">
                                 <ul className="space-y-3">
                                     {tier.features.map((feature) => (
                                         <li key={feature} className="flex items-center gap-2">
@@ -85,7 +80,7 @@ export function Pricing() {
                                 </ul>
                             </CardContent>
                             <CardFooter>
-                                <Button asChild className="w-full" variant={tier.variant}>
+                                <Button asChild className="w-full" variant={tier.popular ? 'default' : 'outline'}>
                                     <Link href={tier.href}>{tier.cta}</Link>
                                 </Button>
                             </CardFooter>
@@ -94,5 +89,5 @@ export function Pricing() {
                 </div>
             </div>
         </section>
-    )
+    );
 }
