@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview A flow to generate an opening message for a lead based on a specific goal.
+ * @fileOverview A flow to generate an opening message for a lead based on a specific goal and custom instructions.
  *
  * - generateOpener - A function that generates an opening message.
  * - GenerateOpenerInput - The input type for the generateOpener function.
@@ -16,6 +16,7 @@ const GenerateOpenerInputSchema = z.object({
     .string()
     .describe('The Instagram profile data of the lead, including bio, recent posts, etc.'),
   goal: z.string().describe('The goal of the conversation (e.g., "Book a call", "Get them to visit our website").'),
+  customPrompt: z.string().optional().describe('Custom instructions for the AI, like dos and donts.'),
 });
 export type GenerateOpenerInput = z.infer<typeof GenerateOpenerInputSchema>;
 
@@ -42,7 +43,12 @@ The message should be casual, authentic, and tailored to the lead's profile. You
 **Conversation Goal:**
 {{goal}}
 
-Based on the data, generate an engaging opening message. Do not make it sound like a generic template. Find something specific in their profile to comment on.
+{{#if customPrompt}}
+**Important Instructions to Follow:**
+{{customPrompt}}
+{{/if}}
+
+Based on the data and instructions, generate an engaging opening message. Do not make it sound like a generic template. Find something specific in their profile to comment on.
 `,
 });
 

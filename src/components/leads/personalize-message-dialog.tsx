@@ -27,6 +27,7 @@ const FormSchema = z.object({
   goal: z.string().min(5, {
     message: 'Goal must be at least 5 characters.',
   }),
+  customPrompt: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof FormSchema>;
@@ -48,6 +49,7 @@ export function PersonalizeMessageDialog({ lead }: PersonalizeMessageDialogProps
     resolver: zodResolver(FormSchema),
     defaultValues: {
       goal: defaultGoal,
+      customPrompt: '',
     },
   });
 
@@ -58,6 +60,7 @@ export function PersonalizeMessageDialog({ lead }: PersonalizeMessageDialogProps
       const result = await runGenerateOpener({
         leadProfileData: `Name: ${lead.name}, Bio: ${lead.bio}, Recent Post context: User is interested in photography and travel.`,
         goal: data.goal,
+        customPrompt: data.customPrompt,
       });
       if (result && 'openingMessage' in result) {
         setGeneratedMessage(result.openingMessage);
@@ -103,7 +106,7 @@ export function PersonalizeMessageDialog({ lead }: PersonalizeMessageDialogProps
         <DialogHeader>
           <DialogTitle>Start AI Conversation with @{lead.username}</DialogTitle>
           <DialogDescription>
-            Define the goal and let the AI generate a personalized opening message to start the conversation.
+            Define the goal and provide custom instructions for the AI to generate a personalized opening message.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -117,6 +120,23 @@ export function PersonalizeMessageDialog({ lead }: PersonalizeMessageDialogProps
                   <FormControl>
                     <Input
                       placeholder="e.g., Book a call, redirect to website"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="customPrompt"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Custom Instructions (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="e.g., Do not mention pricing. Keep the message under 50 words."
+                      rows={3}
                       {...field}
                     />
                   </FormControl>
