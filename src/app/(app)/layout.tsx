@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { useAuth } from '@/context/auth-context';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AppLayout({
   children,
@@ -20,9 +21,21 @@ export default function AppLayout({
     }
   }, [user, loading, router]);
 
-  // Don't render anything while loading or if there's no user
-  // to prevent a flash of the protected content.
-  if (loading || !user) {
+  // Show a loading skeleton while checking auth state
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Skeleton className="h-16 w-16 rounded-full" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+      </div>
+    );
+  }
+  
+  // Don't render anything if there's no user, as we'll be redirecting.
+  // This prevents a flash of protected content.
+  if (!user) {
     return null; 
   }
 

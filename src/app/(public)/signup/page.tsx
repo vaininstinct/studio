@@ -4,8 +4,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-// import { createUserWithEmailAndPassword } from 'firebase/auth';
-// import { auth } from '@/lib/firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,11 +23,20 @@ export default function SignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate signup and redirect
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    router.push('/leads');
-    toast({ title: 'Account Created', description: 'Redirecting to your dashboard.' });
-    setIsLoading(false);
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      router.push('/leads');
+      toast({ title: 'Account Created', description: 'Redirecting to your dashboard.' });
+    } catch (error: any) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Signup Failed',
+        description: error.message || 'Could not create account. Please try again.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -59,7 +68,7 @@ export default function SignupPage() {
                 required
                 minLength={6}
                 value={password}
-                onChange={(e) => setPassword(e.g. value)}
+                onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
               />
             </div>
