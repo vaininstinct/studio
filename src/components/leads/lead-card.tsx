@@ -2,7 +2,6 @@ import Image from 'next/image';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Lead } from '@/lib/data';
-import { PersonalizeMessageDialog } from './personalize-message-dialog';
 
 interface LeadCardProps {
   lead: Lead;
@@ -36,9 +35,7 @@ export function LeadCard({ lead }: LeadCardProps) {
           </div>
         )}
       </CardContent>
-      <CardFooter className="p-4">
-        <PersonalizeMessageDialog lead={lead} />
-      </CardFooter>
+      <CardFooter className="p-4"></CardFooter>
     </Card>
   );
 }
