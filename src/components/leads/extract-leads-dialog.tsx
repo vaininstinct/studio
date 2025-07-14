@@ -18,38 +18,30 @@ import { Loader2, PlusCircle, Search, UserCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ExtractLeadsDialogProps {
-  onCampaignCreated: (campaignName: string) => void;
+  onCampaignCreated: (campaignName: string, targetAccount: string, niche: string) => void;
 }
 
 export function ExtractLeadsDialog({ onCampaignCreated }: ExtractLeadsDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [campaignName, setCampaignName] = useState('');
-  const [target, setTarget] = useState('');
+  const [targetAccount, setTargetAccount] = useState('');
+  const [niche, setNiche] = useState('');
   const { toast } = useToast();
 
   const handleExtract = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setIsExtracting(true);
 
-    if (!campaignName.trim()) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Please provide a campaign name.' });
-      setIsExtracting(false);
+    if (!campaignName.trim() || !targetAccount.trim() || !niche.trim()) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Please fill out all fields.' });
       return;
     }
-    
-    if (!target.trim()) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Please provide a target Instagram account.' });
-        setIsExtracting(false);
-        return;
-    }
 
-    // Close dialog and reset state
+    setIsExtracting(true);
     setIsOpen(false);
     
     try {
-      // Call the parent handler to start the process
-      onCampaignCreated(campaignName);
+      onCampaignCreated(campaignName, targetAccount, niche);
       
       toast({
         title: 'Extraction Started',
@@ -58,7 +50,8 @@ export function ExtractLeadsDialog({ onCampaignCreated }: ExtractLeadsDialogProp
 
       // Reset fields for the next time the dialog is opened
       setCampaignName('');
-      setTarget('');
+      setTargetAccount('');
+      setNiche('');
       
     } catch (error) {
       console.error(error);
@@ -68,7 +61,6 @@ export function ExtractLeadsDialog({ onCampaignCreated }: ExtractLeadsDialogProp
         description: 'Could not start the lead extraction process.',
       });
     } finally {
-      // Set a small timeout to let the dialog close animation finish
       setTimeout(() => setIsExtracting(false), 500);
     }
   };
@@ -85,7 +77,7 @@ export function ExtractLeadsDialog({ onCampaignCreated }: ExtractLeadsDialogProp
         <DialogHeader>
           <DialogTitle>Extract New Leads</DialogTitle>
           <DialogDescription>
-            Create a new campaign and extract followers from a public Instagram account.
+            Create a new campaign and use AI to generate leads from a target Instagram account.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleExtract} className="space-y-4">
@@ -107,13 +99,24 @@ export function ExtractLeadsDialog({ onCampaignCreated }: ExtractLeadsDialogProp
                     <Input 
                         id="target" 
                         name="target" 
-                        placeholder="e.g. @username or full profile URL" 
+                        placeholder="e.g. @username" 
                         required 
                         className="pl-10"
-                        value={target}
-                        onChange={(e) => setTarget(e.target.value)}
+                        value={targetAccount}
+                        onChange={(e) => setTargetAccount(e.target.value)}
                     />
                 </div>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="niche">Niche / Industry</Label>
+                <Input 
+                    id="niche" 
+                    name="niche" 
+                    placeholder="e.g. Fitness, Photography, Real Estate" 
+                    required 
+                    value={niche}
+                    onChange={(e) => setNiche(e.target.value)}
+                />
             </div>
           
           <DialogFooter className="pt-4">

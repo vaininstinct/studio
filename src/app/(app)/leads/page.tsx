@@ -12,6 +12,7 @@ import { PlayCircle, Loader2, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/auth-context';
 import { getCampaigns, addLeadsToCampaign, createCampaign as createDbCampaign, deleteCampaign } from '@/services/campaign';
+import { extractLeads } from '@/ai/flows/extract-leads';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   AlertDialog,
@@ -23,35 +24,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-
-const generateMockLeads = (count: number): Lead[] => {
-  const leads: Lead[] = [];
-  const names = ['Sophia Chen', 'Liam Rodriguez', 'Olivia Martinez', 'Noah Kim', 'Ava Williams', 'Ethan Garcia', 'Isabella Jones', 'Mason Brown'];
-  const usernames = ['sophia.c', 'liam.r', 'olivia.m', 'noah.k', 'ava.w', 'ethan.g', 'isabella.j', 'mason.b'];
-  const bios = [
-    'Digital creator | 📍 NYC | Spreading positivity ✨',
-    'Fitness enthusiast & certified trainer. Let\'s get moving!',
-    'Foodie exploring the world one bite at a time 🍜',
-    'Tech geek & developer. Building the future.',
-    'Fashion lover & style blogger. Dress to express.',
-    'Photographer capturing moments | Canon EOS R5',
-    'Bookworm & writer. Lost in fictional worlds.',
-    'Traveler sharing my adventures around the globe 🌍'
-  ];
-
-  for (let i = 0; i < count; i++) {
-    const nameIndex = Math.floor(Math.random() * names.length);
-    leads.push({
-      id: `lead-${Date.now()}-${i}`,
-      name: names[i % names.length],
-      username: usernames[i % usernames.length],
-      avatarUrl: `https://placehold.co/100x100.png`,
-      bio: bios[i % bios.length],
-      latestPostImageUrl: `https://placehold.co/300x300.png`,
-    });
-  }
-  return leads;
-}
 
 export default function LeadsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -96,58 +68,51 @@ export default function LeadsPage() {
     });
   };
 
-  const onCampaignCreated = async (campaignName: string) => {
+  const onCampaignCreated = async (campaignName: string, targetAccount: string, niche: string) => {
     if (!user) return;
 
+    // Create campaign in DB first to get an ID
     const newCampaign = await createDbCampaign(campaignName, user.uid);
-    const campaignWithStatus: Campaign = { ...newCampaign, status: 'extracting', progress: 0, statusText: 'Initializing...' };
+    const campaignWithStatus: Campaign = { ...newCampaign, status: 'extracting', statusText: 'Initializing...' };
     setCampaigns(prev => [campaignWithStatus, ...prev]);
-  
-    const steps = [
-      { progress: 25, statusText: 'Checking account visibility...' },
-      { progress: 50, statusText: 'Extracting followers...' },
-      { progress: 75, statusText: 'Filtering leads...' },
-      { progress: 100, statusText: 'Finalizing...' },
-    ];
-    let currentStep = 0;
-    
-    const interval = setInterval(() => {
-      if (currentStep >= steps.length) {
-        clearInterval(interval);
-        
-        const newLeads = generateMockLeads(8);
-        
-        setCampaigns(prev => {
-            return prev.map(c => {
-              if (c.id === newCampaign.id) {
-                addLeadsToCampaign(newCampaign.id, newLeads).catch(error => {
-                  console.error("Failed to save leads to database:", error);
-                  toast({
-                    variant: "destructive",
-                    title: "Database Error",
-                    description: "Could not save new leads."
-                  });
-                });
-                return { ...c, status: 'idle', leads: [...(c.leads || []), ...newLeads] };
-              }
-              return c;
-            });
-        });
 
-        toast({
-           title: "Extraction Complete",
-           description: `Finished extracting leads for "${newCampaign.name}".`
-        });
-        return;
-      }
-      
+    try {
+      // Show extracting status
       setCampaigns(prev => prev.map(c => 
-        c.id === newCampaign.id ? { ...c, progress: steps[currentStep].progress, statusText: steps[currentStep].statusText } : c
+        c.id === newCampaign.id ? { ...c, status: 'extracting', statusText: 'AI is generating leads...' } : c
       ));
-      
-      currentStep++;
 
-    }, 1500);
+      // Call AI flow to get leads
+      const { leads: newLeads } = await extractLeads({ targetAccount, niche, count: 8 });
+
+      // Add leads to the campaign in DB
+      await addLeadsToCampaign(newCampaign.id, newLeads);
+
+      // Update local state with new leads and idle status
+      setCampaigns(prev => prev.map(c => {
+        if (c.id === newCampaign.id) {
+          return { ...c, status: 'idle', leads: newLeads };
+        }
+        return c;
+      }));
+
+      toast({
+         title: "Extraction Complete",
+         description: `Finished extracting ${newLeads.length} leads for "${newCampaign.name}".`
+      });
+
+    } catch (error) {
+      console.error("AI Lead Extraction failed:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Extraction Failed',
+        description: 'The AI could not generate leads. Please try again.',
+      });
+      // Revert campaign state on failure
+      setCampaigns(prev => prev.filter(c => c.id !== newCampaign.id));
+      // Optionally, delete the campaign from DB
+      await deleteCampaign(newCampaign.id);
+    }
   };
 
   const handleDeleteCampaign = async () => {
