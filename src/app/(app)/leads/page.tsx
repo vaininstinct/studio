@@ -105,28 +105,36 @@ export default function LeadsPage() {
         
         const newLeads = generateMockLeads(8);
         
-        // Save to firestore in the background
-        addLeadsToCampaign(newCampaign.id, newLeads).catch(error => {
-          console.error("Failed to save leads to database:", error);
-          toast({
-            variant: "destructive",
-            title: "Database Error",
-            description: "Could not save new leads."
-          });
+        // This is tricky: we need the real ID from firestore, but we started optimistically.
+        // For this mock, we'll assume the first campaign in the list is the one we just created.
+        // A more robust solution would involve passing the real ID back.
+        setCampaigns(prev => {
+            const campaignToUpdate = prev.find(c => c.id === newCampaign.id);
+            if (campaignToUpdate) {
+                // Save to firestore in the background
+                addLeadsToCampaign(campaignToUpdate.id, newLeads).catch(error => {
+                  console.error("Failed to save leads to database:", error);
+                  toast({
+                    variant: "destructive",
+                    title: "Database Error",
+                    description: "Could not save new leads."
+                  });
+                });
+            }
+
+            // Update UI immediately
+            return prev.map(c => {
+              if (c.id === newCampaign.id) {
+                return { ...c, status: 'idle', leads: [...(c.leads || []), ...newLeads] };
+              }
+              return c;
+            });
         });
 
-        // Update UI immediately
-        setCampaigns(prev => prev.map(c => {
-          if (c.id === newCampaign.id) {
-            return { ...c, status: 'idle', leads: [...(c.leads || []), ...newLeads] };
-          }
-          return c;
-        }));
-
-         toast({
+        toast({
            title: "Extraction Complete",
            description: `Finished extracting leads for "${newCampaign.name}".`
-         });
+        });
         return;
       }
       
