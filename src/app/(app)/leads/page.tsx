@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { ExtractLeadsDialog } from '@/components/leads/extract-leads-dialog';
-import type { Campaign } from '@/lib/data';
+import type { Campaign, Lead } from '@/lib/data';
 import { LeadCard } from '@/components/leads/lead-card';
 import { CampaignStatus } from '@/components/leads/campaign-status';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -11,8 +11,37 @@ import { Button } from '@/components/ui/button';
 import { PlayCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/auth-context';
-import { getCampaigns } from '@/services/campaign';
+import { getCampaigns, addLeadsToCampaign } from '@/services/campaign';
 import { Skeleton } from '@/components/ui/skeleton';
+
+const generateMockLeads = (count: number): Lead[] => {
+  const leads: Lead[] = [];
+  const names = ['Sophia Chen', 'Liam Rodriguez', 'Olivia Martinez', 'Noah Kim', 'Ava Williams', 'Ethan Garcia', 'Isabella Jones', 'Mason Brown'];
+  const usernames = ['sophia.c', 'liam.r', 'olivia.m', 'noah.k', 'ava.w', 'ethan.g', 'isabella.j', 'mason.b'];
+  const bios = [
+    'Digital creator | 📍 NYC | Spreading positivity ✨',
+    'Fitness enthusiast & certified trainer. Let\'s get moving!',
+    'Foodie exploring the world one bite at a time 🍜',
+    'Tech geek & developer. Building the future.',
+    'Fashion lover & style blogger. Dress to express.',
+    'Photographer capturing moments | Canon EOS R5',
+    'Bookworm & writer. Lost in fictional worlds.',
+    'Traveler sharing my adventures around the globe 🌍'
+  ];
+
+  for (let i = 0; i < count; i++) {
+    const nameIndex = Math.floor(Math.random() * names.length);
+    leads.push({
+      id: `lead-${Date.now()}-${i}`,
+      name: names[i % names.length],
+      username: usernames[i % usernames.length],
+      avatarUrl: `https://placehold.co/100x100.png`,
+      bio: bios[i % bios.length],
+      latestPostImageUrl: `https://placehold.co/300x300.png`,
+    });
+  }
+  return leads;
+}
 
 export default function LeadsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -71,15 +100,31 @@ export default function LeadsPage() {
     const interval = setInterval(() => {
       if (currentStep >= steps.length) {
         clearInterval(interval);
-        setTimeout(() => {
-          setCampaigns(prev => prev.map(c => 
-           c.id === newCampaign.id ? { ...c, status: 'idle' } : c
-         ));
+        
+        const newLeads = generateMockLeads(8);
+        
+        // Save to firestore in the background
+        addLeadsToCampaign(newCampaign.id, newLeads).catch(error => {
+          console.error("Failed to save leads to database:", error);
+          toast({
+            variant: "destructive",
+            title: "Database Error",
+            description: "Could not save new leads."
+          });
+        });
+
+        // Update UI immediately
+        setCampaigns(prev => prev.map(c => {
+          if (c.id === newCampaign.id) {
+            return { ...c, status: 'idle', leads: [...c.leads, ...newLeads] };
+          }
+          return c;
+        }));
+
          toast({
            title: "Extraction Complete",
            description: `Finished extracting leads for "${newCampaign.name}".`
-         })
-       }, 1000);
+         });
         return;
       }
       
